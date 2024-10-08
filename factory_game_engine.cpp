@@ -1,16 +1,11 @@
-
 #include <iostream>
 #include <string>
-#include <unordered_set>
 #include <memory>
-#include <vector>
+#include <unordered_set>
 
 using namespace std;
 
-// Declaration of GameEngine (Subject) class
-class GameEngine;
-
-// Abstract Observer (Player) Class
+// Abstract Player class (Observer)
 class Player {
 public:
     virtual ~Player() = default;
@@ -18,7 +13,7 @@ public:
     virtual void update(const string& event) = 0;
 };
 
-//  Player Class: Warrior
+// Concrete Player Class: Warrior
 class Warrior : public Player {
 public:
     void play() override {
@@ -30,7 +25,7 @@ public:
     }
 };
 
-//  Player Class: Mage
+// Concrete Player Class: Mage
 class Mage : public Player {
 public:
     void play() override {
@@ -42,21 +37,20 @@ public:
     }
 };
 
-//  Factory to create Player objects
+// PlayerFactory to create different types of Player objects
 class PlayerFactory {
 public:
-    unique_ptr<Player> createPlayer(const string& type) {
+    Player* createPlayer(const string& type) {
         if (type == "Warrior") {
-            return make_unique<Warrior>();
-        }
-        else if (type == "Mage") {
-            return make_unique<Mage>();
+            return new Warrior();
+        } else if (type == "Mage") {
+            return new Mage();
         }
         return nullptr;
     }
 };
 
-// (GameEngine) that generates events
+// Subject class (GameEngine) to generate events and notify players
 class GameEngine {
 private:
     unordered_set<Player*> players;
@@ -78,39 +72,46 @@ public:
     }
 };
 
+// Main function demonstrating the factory and observer pattern
 int main() {
     PlayerFactory factory;
     GameEngine gameEngine;
 
     // Create players using the factory
-    unique_ptr<Player> warrior = factory.createPlayer("Warrior");
-    unique_ptr<Player> mage = factory.createPlayer("Mage");
+    Player* warrior = factory.createPlayer("Warrior");
+    Player* mage = factory.createPlayer("Mage");
 
-    // Add players to the game engine to receive events
-    gameEngine.addPlayer(warrior.get());
-    gameEngine.addPlayer(mage.get());
+    // Add players to the game engine
+    gameEngine.addPlayer(warrior);
+    gameEngine.addPlayer(mage);
 
     // Simulate actions for the players
     if (warrior) {
         warrior->play();
     }
-
+    
     if (mage) {
         mage->play();
     }
 
-    gameEngine.generateEvent("Enemy appears!");
-    gameEngine.generateEvent("Power-up available!");
+    // Generate some game events
+    gameEngine.generateEvent("Enemy appeared");
+    gameEngine.generateEvent("Power-up available");
 
     // Create another player and perform an action
-    unique_ptr<Player> anotherWarrior = factory.createPlayer("Warrior");
+    Player* anotherWarrior = factory.createPlayer("Warrior");
     if (anotherWarrior) {
         anotherWarrior->play();
-        gameEngine.addPlayer(anotherWarrior.get());
+        gameEngine.addPlayer(anotherWarrior);
     }
 
-    // Generate another event after adding a new player
-    gameEngine.generateEvent("Boss fight starts!");
+    // Generate another game event
+    gameEngine.generateEvent("Boss fight starts");
+
+    // Clean up
+    delete warrior;
+    delete mage;
+    delete anotherWarrior;
 
     return 0;
 }
